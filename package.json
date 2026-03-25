@@ -1,13 +1,13 @@
 {
-  "name": "discordbot",
-  "version": "1.0.0",
-  "description": "",
+  "name": "THE INNER CIRCLE.EXE BOT",
+  "version": "1.1.0",
+  "description": "a management bot made specially for the inner circle discord server",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Aymen Haque",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
