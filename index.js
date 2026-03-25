@@ -8,7 +8,7 @@ const {
 } = require("discord.js");
 
 // 🔑 PUT YOUR DATA HERE
-const TOKEN = "MTQ4NTkzMzg4ODkzNjA4MzUxNg.GibmHt.Umv6hH59xpc3wdzKCMgaFdi3Yg_LYfhkbSYrM4";
+const TOKEN = process.env.TOKEN;
 const CLIENT_ID = "1485933888936083516";
 
 // 🧠 Temporary warn storage
