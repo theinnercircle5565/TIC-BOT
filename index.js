@@ -217,7 +217,7 @@ client.on("interactionCreate", async i => {
     if (role) pingText = `<@&${role.id}>`;
 
     const footerText = anonymous
-      ? "📢 Anonymous Announcement"
+      ? "🌑 Anonymous Announcement"
       : `Announced by ${i.user.tag}`;
 
     const footerIcon = anonymous
@@ -225,8 +225,8 @@ client.on("interactionCreate", async i => {
       : i.user.displayAvatarURL();
 
     const embed = {
-      color: 0xff0000,
-      title: "📢 SERVER ANNOUNCEMENT",
+      color: 0xd8a8ff,
+      title: "🌑 SERVER ANNOUNCEMENT",
       description: message,
       image: image ? { url: image } : null,
       footer: footerIcon
@@ -241,7 +241,7 @@ client.on("interactionCreate", async i => {
     });
 
     return i.reply({
-      content: "👑 Announcement sent successfully!",
+      content: "🌑 Announcement sent successfully!",
       ephemeral: true
     });
   }
@@ -325,11 +325,12 @@ client.on("messageCreate", async message => {
   const replies = {
     "hello": `👋 Hello ${name}!`,
     "hi": `✨ Hi ${name}!`,
+    "neb": `you are the only neb ${name}!`,
     "hey": `😎 Hey ${name}!`,
     "bye": `👋 Goodbye ${name}!`,
     "good morning": `☀️ Good morning ${name}!`,
     "good night": `🌙 Good night ${name}!`,
-    "who is your owner": `👑 My owner is this server ExploreByYourself.`,
+    "elon": ` **bro @ea556 this fan is looking for you.** `,
   };
 
   if (replies[msg]) {
