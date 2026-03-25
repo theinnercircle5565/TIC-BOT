@@ -9,7 +9,7 @@ const {
 
 // 🔑 PUT YOUR DATA HERE
 const TOKEN = process.env.TOKEN;
-const CLIENT_ID = "1485933888936083516";
+const CLIENT_ID = "1480570358192013443";
 
 // 🧠 Temporary warn storage
 const warns = new Map();
