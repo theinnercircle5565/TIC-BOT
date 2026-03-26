@@ -191,7 +191,7 @@ client.on("interactionCreate", async i => {
       ch.send({
         embeds: [{
           color: 0x00ffae,
-          title: "★彡 PARADOX ANNOUNCEMENT 彡★",
+          title: "★彡 ANNOUNCEMENT 彡★",
           description: msg,
           timestamp: new Date()
         }]
