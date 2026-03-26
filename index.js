@@ -190,7 +190,7 @@ client.on("interactionCreate", async i => {
     const timer = setInterval(() => {
       ch.send({
         embeds: [{
-          color: #d8a8ff,
+          color: 0xd8a8ff,
           title: "★彡 ANNOUNCEMENT 彡★",
           description: msg,
           timestamp: new Date()
