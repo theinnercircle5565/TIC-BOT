@@ -11,6 +11,8 @@ const {
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = "1480570358192013443";
 
+if (!TOKEN) throw new Error("TOKEN env var is missing!");
+
 // 🧠 Temporary warn storage
 const warns = new Map();
 
@@ -85,9 +87,8 @@ const commands = [
   new SlashCommandBuilder()
     .setName("clear")
     .setDescription("Delete messages")
-    .addIntegerOption(o => o.setName("amount").setDescription("Number").setRequired(true)),
+    .addIntegerOption(o => o.setName("amount").setDescription("Number (max 100)").setRequired(true)),
 
-  // 👑 AUTO ANNOUNCER COMMANDS
   new SlashCommandBuilder()
     .setName("announce_start")
     .setDescription("📢 Start auto announcement")
@@ -116,7 +117,8 @@ const rest = new REST({ version: "10" }).setToken(TOKEN);
 })();
 
 // ================= READY =================
-client.once("clientReady", () => {
+// FIX: was "clientReady" — correct event is "ready"
+client.once("ready", () => {
   console.log(`🌌 BOT ONLINE (${client.user.tag})`);
 });
 
@@ -126,129 +128,176 @@ client.on("interactionCreate", async i => {
 
   const member = i.member;
 
-  // ===== INFO =====
-  if (i.commandName === "info") {
-    const user = i.options.getUser("user") || i.user;
-    const m = await i.guild.members.fetch(user.id);
-
-    return i.reply({
-      embeds: [{
-        color: 0x5865f2,
-        title: `👤 ${m.displayName}`,
-        thumbnail: { url: user.displayAvatarURL() },
-        fields: [
-          { name: "Username", value: user.tag, inline: true },
-          { name: "User ID", value: user.id }
-        ]
-      }]
-    });
-  }
-
-  // ===== AVATAR =====
-  if (i.commandName === "avatar") {
-    const user = i.options.getUser("user") || i.user;
-    return i.reply({
-      embeds: [{
-        color: 0x5865f2,
-        title: user.tag,
-        image: { url: user.displayAvatarURL({ size: 1024 }) }
-      }]
-    });
-  }
-
-  // ===== GOD ANNOUNCE =====
-  if (i.commandName === "announce") {
-    if (!member.permissions.has(PermissionsBitField.Flags.Administrator))
-      return i.reply({ content: "❌ Admin only", ephemeral: true });
-
-    const ch = i.options.getChannel("channel");
-    const msg = i.options.getString("message");
-
-    await ch.send({
-      embeds: [{ color: 0xd8a8ff, title: "🌑 SERVER ANNOUNCEMENT", description: msg }]
-    });
-
-    return i.reply({ content: "👑 Sent!", ephemeral: true });
-  }
-
-  // ================= AUTO ANNOUNCER PRO =================
-
-  if (i.commandName === "announce_start") {
-
-    if (!member.permissions.has(PermissionsBitField.Flags.Administrator))
-      return i.reply({ content: "❌ Admin only", ephemeral: true });
-
-    const ch = i.options.getChannel("channel");
-    const mins = i.options.getInteger("minutes");
-    const msg = i.options.getString("message");
-
-    const interval = mins * 60 * 1000;
-
-    if (autoAnnouncements.has(i.guild.id))
-      clearInterval(autoAnnouncements.get(i.guild.id));
-
-    const timer = setInterval(() => {
-      ch.send({
-        embeds: [{
-          color: 0xd8a8ff,
-          title: "✦ ANNOUNCEMENT ✦",
-          description: msg,
-          timestamp: new Date()
-        }]
-      });
-    }, interval);
-
-    autoAnnouncements.set(i.guild.id, timer);
-
-    return i.reply({
-      content: `👑 Started every ${mins} min in ${ch}`,
-      ephemeral: true
-    });
-  }
-
-  if (i.commandName === "announce_stop") {
-
-    if (!member.permissions.has(PermissionsBitField.Flags.Administrator))
-      return i.reply({ content: "❌ Admin only", ephemeral: true });
-
-    const timer = autoAnnouncements.get(i.guild.id);
-    if (!timer)
-      return i.reply({ content: "⚠️ Nothing running", ephemeral: true });
-
-    clearInterval(timer);
-    autoAnnouncements.delete(i.guild.id);
-
-    return i.reply({ content: "🛑 Stopped", ephemeral: true });
-  }
-
-  // ================= MOD COMMANDS =================
-
-  if (!member.permissions.has(PermissionsBitField.Flags.ModerateMembers))
-    return;
-
-  const user = i.options.getUser("user");
-  const target = user ? await i.guild.members.fetch(user.id) : null;
-
   try {
 
+    // ===== INFO =====
+    if (i.commandName === "info") {
+      const user = i.options.getUser("user") || i.user;
+      const m = await i.guild.members.fetch(user.id);
+
+      return i.reply({
+        embeds: [{
+          color: 0x5865f2,
+          title: `👤 ${m.displayName}`,
+          thumbnail: { url: user.displayAvatarURL() },
+          fields: [
+            { name: "Username", value: user.tag, inline: true },
+            { name: "User ID", value: user.id }
+          ]
+        }]
+      });
+    }
+
+    // ===== AVATAR =====
+    if (i.commandName === "avatar") {
+      const user = i.options.getUser("user") || i.user;
+      return i.reply({
+        embeds: [{
+          color: 0x5865f2,
+          title: user.tag,
+          image: { url: user.displayAvatarURL({ size: 1024 }) }
+        }]
+      });
+    }
+
+    // ===== GOD ANNOUNCE =====
+    if (i.commandName === "announce") {
+      if (!member.permissions.has(PermissionsBitField.Flags.Administrator))
+        return i.reply({ content: "❌ Admin only", ephemeral: true });
+
+      const ch = i.options.getChannel("channel");
+      const msg = i.options.getString("message");
+
+      await ch.send({
+        embeds: [{ color: 0xd8a8ff, title: "🌑 SERVER ANNOUNCEMENT", description: msg }]
+      });
+
+      return i.reply({ content: "👑 Sent!", ephemeral: true });
+    }
+
+    // ================= AUTO ANNOUNCER =================
+
+    if (i.commandName === "announce_start") {
+      if (!member.permissions.has(PermissionsBitField.Flags.Administrator))
+        return i.reply({ content: "❌ Admin only", ephemeral: true });
+
+      const ch = i.options.getChannel("channel");
+      const mins = i.options.getInteger("minutes");
+      const msg = i.options.getString("message");
+
+      if (autoAnnouncements.has(i.guild.id))
+        clearInterval(autoAnnouncements.get(i.guild.id));
+
+      const timer = setInterval(() => {
+        ch.send({
+          embeds: [{
+            color: 0xd8a8ff,
+            title: "✦ ANNOUNCEMENT ✦",
+            description: msg,
+            timestamp: new Date()
+          }]
+        });
+      }, mins * 60 * 1000);
+
+      autoAnnouncements.set(i.guild.id, timer);
+
+      return i.reply({
+        content: `👑 Started every ${mins} min in ${ch}`,
+        ephemeral: true
+      });
+    }
+
+    if (i.commandName === "announce_stop") {
+      if (!member.permissions.has(PermissionsBitField.Flags.Administrator))
+        return i.reply({ content: "❌ Admin only", ephemeral: true });
+
+      const timer = autoAnnouncements.get(i.guild.id);
+      if (!timer)
+        return i.reply({ content: "⚠️ Nothing running", ephemeral: true });
+
+      clearInterval(timer);
+      autoAnnouncements.delete(i.guild.id);
+
+      return i.reply({ content: "🛑 Stopped", ephemeral: true });
+    }
+
+    // ================= MOD COMMANDS =================
+
+    if (!member.permissions.has(PermissionsBitField.Flags.ModerateMembers))
+      return i.reply({ content: "❌ No permission", ephemeral: true });
+
+    const user = i.options.getUser("user");
+    const target = user ? await i.guild.members.fetch(user.id).catch(() => null) : null;
+
+    // ===== KICK =====
     if (i.commandName === "kick") {
+      if (!target) return i.reply({ content: "❌ User not found", ephemeral: true });
       await target.kick();
-      return i.reply(`👢 Kicked ${user.tag}`);
+      return i.reply(`👢 Kicked **${user.tag}**`);
     }
 
+    // ===== BAN =====
     if (i.commandName === "ban") {
+      if (!target) return i.reply({ content: "❌ User not found", ephemeral: true });
       await target.ban();
-      return i.reply(`🔨 Banned ${user.tag}`);
+      return i.reply(`🔨 Banned **${user.tag}**`);
     }
 
+    // ===== UNBAN =====
+    if (i.commandName === "unban") {
+      const id = i.options.getString("id");
+      await i.guild.members.unban(id);
+      return i.reply(`✅ Unbanned user ID **${id}**`);
+    }
+
+    // ===== TIMEOUT =====
+    if (i.commandName === "timeout") {
+      if (!target) return i.reply({ content: "❌ User not found", ephemeral: true });
+      const mins = i.options.getInteger("minutes");
+      await target.timeout(mins * 60 * 1000);
+      return i.reply(`⏳ Timed out **${user.tag}** for ${mins} minute(s)`);
+    }
+
+    // ===== REMOVE TIMEOUT =====
+    if (i.commandName === "remove_timeout") {
+      if (!target) return i.reply({ content: "❌ User not found", ephemeral: true });
+      await target.timeout(null);
+      return i.reply(`✅ Removed timeout from **${user.tag}**`);
+    }
+
+    // ===== WARN =====
+    if (i.commandName === "warn") {
+      if (!target) return i.reply({ content: "❌ User not found", ephemeral: true });
+      const key = `${i.guild.id}-${user.id}`;
+      const current = warns.get(key) || 0;
+      warns.set(key, current + 1);
+      return i.reply(`⚠️ **${user.tag}** warned — total warns: **${current + 1}**`);
+    }
+
+    // ===== REMOVE WARN =====
+    if (i.commandName === "remove_warn") {
+      if (!target) return i.reply({ content: "❌ User not found", ephemeral: true });
+      const key = `${i.guild.id}-${user.id}`;
+      const current = warns.get(key) || 0;
+      if (current === 0) return i.reply({ content: `ℹ️ **${user.tag}** has no warns`, ephemeral: true });
+      warns.set(key, current - 1);
+      return i.reply(`✅ Removed a warn from **${user.tag}** — total warns: **${current - 1}**`);
+    }
+
+    // ===== CLEAR =====
     if (i.commandName === "clear") {
-      const amt = i.options.getInteger("amount");
+      // FIX: cap at 100, Discord's max for bulkDelete
+      const amt = Math.min(i.options.getInteger("amount"), 100);
       await i.channel.bulkDelete(amt, true);
-      return i.reply({ content: `🧹 Deleted ${amt}`, ephemeral: true });
+      return i.reply({ content: `🧹 Deleted ${amt} message(s)`, ephemeral: true });
     }
 
   } catch (err) {
     console.error(err);
+    // FIX: always reply on error so interaction doesn't hang
+    if (!i.replied && !i.deferred) {
+      i.reply({ content: "❌ Something went wrong.", ephemeral: true });
+    }
   }
 
 });
