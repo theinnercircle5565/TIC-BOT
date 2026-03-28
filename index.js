@@ -165,7 +165,7 @@ client.on("interactionCreate", async i => {
     const msg = i.options.getString("message");
 
     await ch.send({
-      embeds: [{ color: 0xd8a8ff, title: "🌑 SERVER ANNOUNCEMENT ", description: msg }]
+      embeds: [{ color: 0xd8a8ff, title: "🌑 SERVER ANNOUNCEMENT", description: msg }]
     });
 
     return i.reply({ content: "👑 Sent!", ephemeral: true });
